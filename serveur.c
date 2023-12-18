@@ -8,6 +8,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <signal.h>
+#include <fcntl.h>
 
 #include "hachage.h"
 #include "prime.h"
@@ -18,75 +20,98 @@ struct th_info{
 };
 
 void * handle_client(void * pctx){
+
+    // déclaration de la hash table et du fichier où l'on va stocker les variables de nos clients
     hash_table* ht = ht_new();
+    int fd = open("./file.dat", O_RDWR | O_CREAT, 0600);
+    if (fd < 0){
+        perror("open");
+    }
 
 	struct th_info * ctx = (struct th_info *)pctx;
 	int client_fd = ctx->fd;
+    printf("Client %d\n", ctx->i);
 
     char name[30];
-    write(client_fd, "> NOM : ", 6); 
+    write(client_fd, "$ NOM : ", 8); 
     int rd = read(client_fd, name, sizeof(name) - 1);
     name[rd] = '\0';
 
     char buff[128];
-    snprintf(buff, 128, "BIENVENUE %s\n", name);
+    snprintf(buff, 128, "BIENVENUE %s", name);
     write(client_fd, buff, strlen(buff));
 
     int ret;
+    write(client_fd, "$ ", 2);
     while((ret = read(client_fd, buff, 128)) != 0){
 
-        write(client_fd, "> ", 2);
+        // On actualise notre fichier à chaque boucle
+        save(ht, fd);
+
         // Commande PING
-        if (strncasecmp(buff, "ping", 4) == 0) write(client_fd, "PONG\n", 5);
+        if (strncasecmp(buff, "ping", 4) == 0) {
+            write(client_fd, "PONG\n", 5);
+            write(client_fd, "$ ", 2);
 
         // Commande SET
-        if (strncasecmp(buff, "set ", 4) == 0) {
+        } else if (strncasecmp(buff, "set ", 4) == 0) {
             int i = 4;
             int j = 0;
             char key[32], value[128];
-            while (buff[i] != ' ') key[j++] = buff[i++];
+            while (buff[i] != ' ' && buff[i] != '\0') key[j++] = buff[i++];
             key[j] = '\0';
 
-            while (buff[i] == ' ')i++;
+            while (buff[i] == ' ') i++;
 
             j = 0;
-            while (buff[i] != '\n') value[j++] = buff[i++];
+            while (buff[i] != '\n' && buff[i] != '\0') value[j++] = buff[i++];
             value[j] = '\0';
 
             insert(ht, key, value);
             write(client_fd, "OK\n", 3);
-        }
+            write(client_fd, "$ ", 2);
 
         // Commande GET
-        if (strncasecmp(buff, "get ", 4) == 0) {
+        } else if (strncasecmp(buff, "get ", 4) == 0) {
             char key[32];
             int i = 4;
             int j = 0;
-            while (buff[i] != ' ') key[j++] = buff[i++];
+            while (buff[i] != 10) key[j++] = buff[i++];
             key[j] = '\0';
 
             const char* value = search(ht, key);
-            if (value != NULL) write(client_fd, value, strlen(value));
-            write(client_fd, "\n", 1);
-        }
+            if (value != NULL) {
+                write(client_fd, value, strlen(value));
+                write(client_fd, "\n", 1);
+            } else {
+                write(client_fd, "Clé non trouvée\n", strlen("Clé non trouvée\n"));    
+            }
+            write(client_fd, "$ ", 2);
 
         // Commande DEL
-        if (strncasecmp(buff, "del ", 4) == 0) {
+        } else if (strncasecmp(buff, "del ", 4) == 0) {
             char key[32];
-            int i = 4;  
-            int j = 0; 
-            while (buff[i] != ' ') key[j++] = buff[i++];
+            int i = 4;
+            int j = 0;
+            while (buff[i] != 10) key[j++] = buff[i++];
             key[j] = '\0';
-
             del(ht, key);
+            write(client_fd, "OK\n", 3);
+            write(client_fd, "$ ", 2);
+
+        // Sortie du programme
+        } else if (strncasecmp(buff, "exit", 4) == 0) {
+            break; 
+        } else {
+            write(client_fd, "Commande introuvable\n", strlen("Commande introuvable\n"));
+            write(client_fd, "$ ", 2);
         }
     }
-
-    sleep(5);
     close(client_fd);
 
     free(ctx);
     del_hash_table(ht);
+    close(fd);
 
 	return NULL;
 }

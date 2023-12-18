@@ -18,6 +18,7 @@ typedef struct {
 
 } hash_table;
 
+// fonctions de base d'une hash table
 static pair* new_pair(const char* k, const char* v);
 hash_table* ht_new();
 
@@ -36,4 +37,6 @@ void insert(hash_table* ht, const char* key, const char* value);
 char* search(hash_table* ht, const char* key);
 void del(hash_table* ht, const char* key);
 
+// stockage sur le disque
+void save(hash_table* ht, int fd);
 #endif

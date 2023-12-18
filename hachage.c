@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 static pair HT_DELETED_p = {NULL, NULL};
 
@@ -151,7 +155,6 @@ void del(hash_table* ht, const char* key) {
     while (p != NULL) {
         if (p != &HT_DELETED_p) {
             if (strcmp(p->key, key) == 0) {
-    (p);
                 ht->p[index] = &HT_DELETED_p;
             }
         }
@@ -160,4 +163,16 @@ void del(hash_table* ht, const char* key) {
         i++;
     }
     ht->count--;
+}
+
+
+void save(hash_table* ht, int fd){
+    for (int i=0; i < ht->size; i++){
+        pair* p = ht->p[i];
+        if (p != NULL && p != &HT_DELETED_p){
+            write(fd, p->key, strlen(p->key) + 1);
+            write(fd, " ", 1);
+            write(fd, p->value, strlen(p->value) + 1);
+        }
+    }
 }
