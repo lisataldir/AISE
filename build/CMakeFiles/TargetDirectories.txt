@@ -1,0 +1,3 @@
+/home/lisa/Documents/M1 CHPS/Semestre 1/AISE_24/projet/build/CMakeFiles/main.exe.dir
+/home/lisa/Documents/M1 CHPS/Semestre 1/AISE_24/projet/build/CMakeFiles/edit_cache.dir
+/home/lisa/Documents/M1 CHPS/Semestre 1/AISE_24/projet/build/CMakeFiles/rebuild_cache.dir
