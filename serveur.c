@@ -17,7 +17,6 @@
 #include "commandes.h"
 
 
-
 void * handle_client(void * pctx){
 
     // Création hash table pour les clés/valeurs
@@ -31,7 +30,7 @@ void * handle_client(void * pctx){
     // Création du fichier où l'on va stocker les variables, un par client
     char fichier[128];
     snprintf(fichier, 128, "../clients/variables%d.txt", ctx->i);
-    int fd = open(fichier, O_RDWR | O_CREAT, 0666);
+    int fd = open(fichier, O_RDWR | O_CREAT | O_TRUNC, 0666);
     if (fd < 0){
         perror("open");
     }
@@ -68,9 +67,14 @@ void * handle_client(void * pctx){
             COPY(client_fd, buff, ht_key, fd);
         } else if (strncasecmp(buff, "echo", 4) == 0){
             ECHO(client_fd, buff);
-        } else if (strncasecmp(buff, "exit", 4) == 0){
+
+        } else if (strncasecmp(buff, "incr", 4) == 0){
+            INCR(client_fd, buff, ht_key, fd);
+
+        } else if (strncasecmp(buff, "shutdown", 4) == 0){
             write(client_fd, "Connection terminée\n", strlen("Connection terminée\n"));
             break;
+
         } else {
             write(client_fd, "Commande introuvable (taper help)\n", strlen("Commande introuvable (taper help)\n"));
             write(client_fd, "> ", 2);
@@ -78,11 +82,14 @@ void * handle_client(void * pctx){
     }
 
     printf("Déconnection client %d\n", ctx->i);
+
+    // Fermeture des fichiers et suppression de la hash table
     close(client_fd);
     free(ctx);
     del_hash_table(ht_key);
     close(fd);
     close(fd_bis);
+
 	return NULL;
 }
 

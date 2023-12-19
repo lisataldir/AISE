@@ -102,7 +102,7 @@ void COPY(int client_fd, char* buff, hash_table* ht, int fd){
     char key[32];
     int i = 5;
     int j = 0;
-    while (buff[i] != 32) key[j++] = buff[i++];
+    while (buff[i] != '\0' && buff[i] != ' ') key[j++] = buff[i++];
 
     key[j] = '\0';
     char* value = search(ht, key);
@@ -133,6 +133,31 @@ void ECHO(int client_fd, char* buff){
     write(client_fd, "> ", 2);
 }
 
+// Commande INCR
+void INCR(int client_fd, char* buff, hash_table* ht, int fd){
+    char key[32];
+    int i = 5;
+    int j = 0;
+    while (buff[i] != '\0' && buff[i] != '\n' && buff[i] != ' ') key[j++] = buff[i++];
+    printf("Valeur de la clé: %s\n", key);
+
+    char* value = search(ht, key);
+
+    if (value != NULL) {
+        int incrementedValue = atoi(value) + 1;  
+        char updatedValue[12]; 
+        sprintf(updatedValue, "%d", incrementedValue);
+        printf("%s", updatedValue);
+        
+        insert(ht, key, updatedValue);
+        write(client_fd, updatedValue, strlen(updatedValue));
+        save(ht, fd);
+    } else {
+        write(client_fd, "Clé non trouvée\n", strlen("Clé non trouvée\n"));  
+    }
+    write(client_fd, "> ", 2);
+}
+
 // Commande HELP
 void HELP(int client_fd, char* buff){
     write(client_fd, "Commandes disponibles :\n", strlen("Commandes disponibles :\n"));
@@ -143,11 +168,9 @@ void HELP(int client_fd, char* buff){
     write(client_fd, "ACL USERS\n", 10);
     write(client_fd, "COPY [clé 1] [clé 2]\n", strlen("COPY [clé 1] [clé 2]\n"));
     write(client_fd, "ECHO [chaine de caractères]\n", strlen("ECHO [chaine de caractères]\n"));
-    write(client_fd, "EXIT\n", 5);
+    write(client_fd, "INCR [clé]\n", strlen("INCR [clé]\n"));
+    write(client_fd, "SHUTDOWN\n", 5);
     write(client_fd, "> ", 2);
 }
         
-// Sortie du programme
-void EXIT(int client_fd){
-    write(client_fd, "Connection terminée\n", strlen("Connection terminée\n"));
-}
+

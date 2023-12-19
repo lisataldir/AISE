@@ -26,6 +26,6 @@ void ACL_USERS(int client_fd);
 void HELP(int client_fd, char* buff);
 void COPY(int client_fd, char* buff, hash_table* ht, int fd);
 void ECHO(int client_fd, char* buff);
-void EXIT(int client_fd);
+void INCR(int client_fd, char* buff, hash_table* ht, int fd);
 
 #endif
