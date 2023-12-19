@@ -18,12 +18,14 @@
 #include "prime.h"
 #include "serveur.h"
 
-void PING(int client_fd, char* buff);
+void PING(int client_fd);
 void SET(int client_fd, char* buff, hash_table* ht, int fd);
 void GET(int client_fd, char* buff, hash_table* ht);
 void DEL(int client_fd, char* buff, hash_table* ht, int fd);
 void ACL_USERS(int client_fd);
 void HELP(int client_fd, char* buff);
+void COPY(int client_fd, char* buff, hash_table* ht, int fd);
+void ECHO(int client_fd, char* buff);
 void EXIT(int client_fd);
 
 #endif

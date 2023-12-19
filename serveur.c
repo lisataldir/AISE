@@ -37,7 +37,6 @@ void * handle_client(void * pctx){
     }
 
     // Ouverture du fichier où l'on stocke les noms des clients
-
     int fd_bis = open("../noms.txt", O_RDWR | O_APPEND, 0666);
     char name[30];
     write(client_fd, "$ NOM : ", 8); 
@@ -55,19 +54,22 @@ void * handle_client(void * pctx){
     while((ret = read(client_fd, buff, 128)) != 0){
 
         if (strncasecmp(buff, "ping", 4) == 0) {
-            PING(client_fd, buff);
-        } else if (strncasecmp(buff, "set ", 4) == 0) {
+            PING(client_fd);
+        } else if (strncasecmp(buff, "set", 3) == 0) {
             SET(client_fd, buff, ht_key, fd);
-        } else if (strncasecmp(buff, "get ", 4) == 0) {
+        } else if (strncasecmp(buff, "get", 3) == 0) {
             GET(client_fd, buff, ht_key);
-        } else if (strncasecmp(buff, "del ", 4) == 0) {
+        } else if (strncasecmp(buff, "del", 3) == 0) {
             DEL(client_fd, buff, ht_key, fd);
         } else if (strncasecmp(buff, "acl users", 9) == 0) {
             ACL_USERS(client_fd);
         } else if (strncasecmp(buff, "help", 4) == 0) {
             HELP(client_fd, buff);
-            break;
-        } else if (strncasecmp(buff, "exit", 4) == 0) {
+        } else if (strncasecmp(buff, "copy", 4) == 0) {
+            COPY(client_fd, buff, ht_key, fd);
+        } else if (strncasecmp(buff, "echo", 4) == 0){
+            ECHO(client_fd, buff);
+        } else if (strncasecmp(buff, "exit", 4) == 0){
             write(client_fd, "Connection terminée\n", strlen("Connection terminée\n"));
             break;
         } else {
