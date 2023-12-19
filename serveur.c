@@ -27,21 +27,13 @@ void * handle_client(void * pctx){
 	int client_fd = ctx->fd;
     printf("Connection client %d\n", ctx->i);
 
-    // Création du fichier où l'on va stocker les variables, un par client
-    char fichier[128];
-    snprintf(fichier, 128, "../clients/variables%d.txt", ctx->i);
-    int fd = open(fichier, O_RDWR | O_CREAT | O_TRUNC, 0666);
-    if (fd < 0){
-        perror("open");
-    }
-
     // Ouverture du fichier où l'on stocke les noms des clients
-    int fd_bis = open("../clients/noms.txt", O_RDWR | O_APPEND, 0666);
+    int fd = open("../clients/noms.txt", O_RDWR | O_APPEND, 0666);
     char name[30];
     write(client_fd, "> NOM : ", 8); 
     int rd = read(client_fd, name, sizeof(name) - 1);
     name[rd] = '\0';
-    write(fd_bis, name, strlen(name));
+    write(fd, name, strlen(name));
 
     char buff[128];
     snprintf(buff, 128, "BIENVENUE %s", name);
@@ -54,23 +46,23 @@ void * handle_client(void * pctx){
         if (strncasecmp(buff, "ping", 4) == 0) {
             PING(client_fd);
         } else if (strncasecmp(buff, "set", 3) == 0) {
-            SET(client_fd, buff, ht_key, ctx);
+            SET(client_fd, buff, ht_key);
         } else if (strncasecmp(buff, "get", 3) == 0) {
             GET(client_fd, buff, ht_key);
         } else if (strncasecmp(buff, "del", 3) == 0) {
-            DEL(client_fd, buff, ht_key, ctx);
+            DEL(client_fd, buff, ht_key);
         } else if (strncasecmp(buff, "acl users", 9) == 0) {
             ACL_USERS(client_fd);
         } else if (strncasecmp(buff, "help", 4) == 0) {
             HELP(client_fd, buff);
         } else if (strncasecmp(buff, "copy", 4) == 0) {
-            COPY(client_fd, buff, ht_key, fd);
+            COPY(client_fd, buff, ht_key);
         } else if (strncasecmp(buff, "echo", 4) == 0){
             ECHO(client_fd, buff);
-
         } else if (strncasecmp(buff, "incr", 4) == 0){
-            INCR(client_fd, buff, ht_key, fd);
-
+            INCR(client_fd, buff, ht_key);
+        } else if (strncasecmp(buff, "save", 4) == 0){
+            SAVE(client_fd, ht_key, ctx);
         } else if (strncasecmp(buff, "shutdown", 4) == 0){
             write(client_fd, "Connection terminée\n", strlen("Connection terminée\n"));
             break;
@@ -88,7 +80,6 @@ void * handle_client(void * pctx){
     free(ctx);
     del_hash_table(ht_key);
     close(fd);
-    close(fd_bis);
 
 	return NULL;
 }

@@ -7,7 +7,7 @@ void PING(int client_fd){
 }
 
 // Commande SET
-void SET(int client_fd, char* buff, hash_table* ht, struct th_info* ctx){
+void SET(int client_fd, char* buff, hash_table* ht){
     int i = 4;
     int j = 0;
     char key[32], value[128];
@@ -23,16 +23,6 @@ void SET(int client_fd, char* buff, hash_table* ht, struct th_info* ctx){
     insert(ht, key, value);
     write(client_fd, "OK\n", 3);
     write(client_fd, "> ", 2);
-
-    // on ouvre le fichier associé et on stocke les nouvelles valeurs
-    char fichier[128];
-    snprintf(fichier, 128, "../clients/variables%d.txt", ctx->i);
-    int fd = open(fichier, O_RDWR, 0666);
-    if (fd < 0){
-        perror("open");
-    }
-    save(ht, fd);
-    close(fd);
 }
 
 // Commande GET
@@ -56,7 +46,7 @@ void GET(int client_fd, char* buff, hash_table* ht){
 
 
 // Commande DEL
-void DEL(int client_fd, char* buff, hash_table* ht, struct th_info* ctx){
+void DEL(int client_fd, char* buff, hash_table* ht){
     char key[32];
     int i = 4;
     int j = 0;
@@ -67,16 +57,6 @@ void DEL(int client_fd, char* buff, hash_table* ht, struct th_info* ctx){
             
     write(client_fd, "OK\n", 3);
     write(client_fd, "> ", 2);
-
-    // On ecrase le fichier précédent
-    char fichier[128];
-    snprintf(fichier, 128, "../clients/variables%d.txt", ctx->i);
-    int fd = open(fichier, O_RDWR | O_TRUNC, 0666);
-    if (fd < 0){
-        perror("open");
-    }
-    save(ht, fd);
-    close(fd);
 }
 
 // Commande ACL USERS
@@ -96,7 +76,7 @@ void ACL_USERS(int client_fd){
 }
 
 // Commande COPY
-void COPY(int client_fd, char* buff, hash_table* ht, int fd){
+void COPY(int client_fd, char* buff, hash_table* ht){
 
     // On récupère la clé et puis la valeur
     char key[32];
@@ -109,7 +89,7 @@ void COPY(int client_fd, char* buff, hash_table* ht, int fd){
 
     if (value != NULL) {
         while (buff[i] == ' ') i++;
-        // On récupère ensuite la nouvelle clé et on insère dans la hash table et dans le fichier
+        // On récupère ensuite la nouvelle clé et on l'insère dans la hash table et dans le fichier
         j = 0;
 
         char keybis[32];
@@ -119,7 +99,6 @@ void COPY(int client_fd, char* buff, hash_table* ht, int fd){
         insert(ht, keybis, value);
         write(client_fd, "OK\n", 3);
         write(client_fd, "> ", 2);
-        save(ht, fd);
     } else {
         write(client_fd, "Clé non trouvée\n", strlen("Clé non trouvée\n"));    
     }
@@ -134,7 +113,7 @@ void ECHO(int client_fd, char* buff){
 }
 
 // Commande INCR
-void INCR(int client_fd, char* buff, hash_table* ht, int fd){
+void INCR(int client_fd, char* buff, hash_table* ht){
     char key[32];
     int i = 5;
     int j = 0;
@@ -147,29 +126,40 @@ void INCR(int client_fd, char* buff, hash_table* ht, int fd){
         int incrementedValue = atoi(value) + 1;  
         char updatedValue[12]; 
         sprintf(updatedValue, "%d", incrementedValue);
-        printf("%s", updatedValue);
-        
         insert(ht, key, updatedValue);
         write(client_fd, updatedValue, strlen(updatedValue) + 1);
-        save(ht, fd);
     } else {
         write(client_fd, "Clé non trouvée\n", strlen("Clé non trouvée\n"));  
     }
     write(client_fd, "\n> ", 3);
 }
 
+void SAVE(int client_fd, hash_table* ht, struct th_info* ctx){
+    // Création du fichier où l'on va stocker les variables, un par client
+    char fichier[128];
+    snprintf(fichier, 128, "../clients/variables%d.txt", ctx->i);
+    int fd = open(fichier, O_RDWR | O_CREAT | O_TRUNC, 0666);
+    if (fd < 0){
+        perror("open");
+    }
+    save(ht, fd);
+    write(client_fd, "> ", 2);
+    close(fd);
+}
+
 // Commande HELP
 void HELP(int client_fd, char* buff){
     write(client_fd, "Commandes disponibles :\n", strlen("Commandes disponibles :\n"));
-    write(client_fd, "PING\n", 5);
+    write(client_fd, "PING\n", 6);
     write(client_fd, "SET [clé] [valeur]\n", strlen("SET [clé] [valeur]\n"));
     write(client_fd, "GET [clé]\n", strlen("GET [clé]\n"));
     write(client_fd, "DEL [clé]\n", strlen("DEL [clé]\n"));
-    write(client_fd, "ACL USERS\n", 10);
+    write(client_fd, "ACL USERS\n", 11);
     write(client_fd, "COPY [clé 1] [clé 2]\n", strlen("COPY [clé 1] [clé 2]\n"));
     write(client_fd, "ECHO [chaine de caractères]\n", strlen("ECHO [chaine de caractères]\n"));
     write(client_fd, "INCR [clé]\n", strlen("INCR [clé]\n"));
-    write(client_fd, "SHUTDOWN\n", 5);
+    write(client_fd, "SAVE\n", 6);
+    write(client_fd, "SHUTDOWN\n", 10);
     write(client_fd, "> ", 2);
 }
         
