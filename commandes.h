@@ -22,7 +22,7 @@ void PING(int client_fd, char* buff);
 void SET(int client_fd, char* buff, hash_table* ht, int fd);
 void GET(int client_fd, char* buff, hash_table* ht);
 void DEL(int client_fd, char* buff, hash_table* ht, int fd);
-void ACL_USERS(int client_fd, int fd);
+void ACL_USERS(int client_fd);
 void HELP(int client_fd, char* buff);
 void EXIT(int client_fd);
 

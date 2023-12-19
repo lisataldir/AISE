@@ -61,15 +61,19 @@ void DEL(int client_fd, char* buff, hash_table* ht, int fd){
     write(client_fd, "> ", 2);
 }
 
-// Commande ACL USERS
-void ACL_USERS(int client_fd, int fd){
-    char buff[200];
+// Commande ACL USERS (à corriger)
+void ACL_USERS(int client_fd){
+    char buff[50];
     int n = 1;
 
     // On récupère le contenu du fichier et on le passe a client_fd
-    ssize_t count;
-    while ((count = read(fd, buff, 200)) != 0){
+    FILE* fd = fopen("../noms.txt", "r");
+    while (fgets(buff, 50, fd) != 0){
         printf("%s", buff);
+        char tmp[100];
+        snprintf(tmp, 100, "%d) %s",n, buff);
+        write(client_fd, tmp, strlen(tmp));
+        n++;
     }
     write(client_fd, "> ", 2);
 }

@@ -18,8 +18,7 @@
 
 int main(int argc, char const *argv[])
 {
-
-    // On crée le fichier qui va contenir les noms des clients
+    // Ici on crée le fichier où l'on va stocker le nom des clients
     int fd = open("../noms.txt", O_RDWR | O_CREAT, 0666);
     if (fd < 0){
         perror("open");
