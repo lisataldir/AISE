@@ -139,7 +139,7 @@ void INCR(int client_fd, char* buff, hash_table* ht, int fd){
     int i = 5;
     int j = 0;
     while (buff[i] != '\0' && buff[i] != '\n' && buff[i] != ' ') key[j++] = buff[i++];
-    printf("Valeur de la clé: %s\n", key);
+    key[j] = '\0';
 
     char* value = search(ht, key);
 
@@ -150,12 +150,12 @@ void INCR(int client_fd, char* buff, hash_table* ht, int fd){
         printf("%s", updatedValue);
         
         insert(ht, key, updatedValue);
-        write(client_fd, updatedValue, strlen(updatedValue));
+        write(client_fd, updatedValue, strlen(updatedValue) + 1);
         save(ht, fd);
     } else {
         write(client_fd, "Clé non trouvée\n", strlen("Clé non trouvée\n"));  
     }
-    write(client_fd, "> ", 2);
+    write(client_fd, "\n> ", 3);
 }
 
 // Commande HELP
