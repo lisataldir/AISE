@@ -1,1 +1,0 @@
-/usr/bin/cc CMakeFiles/main.exe.dir/main.c.o CMakeFiles/main.exe.dir/serveur.c.o CMakeFiles/main.exe.dir/commandes.c.o CMakeFiles/main.exe.dir/hachage.c.o CMakeFiles/main.exe.dir/prime.c.o -o main.exe  -lm 

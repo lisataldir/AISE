@@ -39,4 +39,5 @@ void del(hash_table* ht, const char* key);
 
 // stockage sur le disque
 void save(hash_table* ht, int fd);
+
 #endif

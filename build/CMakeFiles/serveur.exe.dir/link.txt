@@ -1,1 +1,0 @@
-/usr/bin/cc CMakeFiles/serveur.exe.dir/serveur.c.o CMakeFiles/serveur.exe.dir/hachage.c.o CMakeFiles/serveur.exe.dir/prime.c.o -o serveur.exe  -lm 
