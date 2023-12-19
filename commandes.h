@@ -19,9 +19,9 @@
 #include "serveur.h"
 
 void PING(int client_fd);
-void SET(int client_fd, char* buff, hash_table* ht, int fd);
+void SET(int client_fd, char* buff, hash_table* ht, struct th_info* ctx);
 void GET(int client_fd, char* buff, hash_table* ht);
-void DEL(int client_fd, char* buff, hash_table* ht, int fd);
+void DEL(int client_fd, char* buff, hash_table* ht, struct th_info* ctx);
 void ACL_USERS(int client_fd);
 void HELP(int client_fd, char* buff);
 void COPY(int client_fd, char* buff, hash_table* ht, int fd);

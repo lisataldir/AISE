@@ -19,8 +19,8 @@
 int main(int argc, char const *argv[])
 {
     // Ici on crée le fichier où l'on va stocker le nom des clients
-    int fd = open("../noms.txt", O_RDWR | O_CREAT, 0666);
-    if (fd < 0){
+    int create = open("../clients/noms.txt", O_RDWR | O_CREAT, 0666);
+    if (create < 0){
         perror("open");
     }
 
@@ -72,7 +72,7 @@ int main(int argc, char const *argv[])
 
     if(server_ready == 0)
     {
-        fprintf(stderr, "PAS SERVER READY :-'(");
+        fprintf(stderr, "PAS DE SERVEUR PRES");
         return 1;
     }
 

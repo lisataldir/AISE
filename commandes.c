@@ -7,7 +7,7 @@ void PING(int client_fd){
 }
 
 // Commande SET
-void SET(int client_fd, char* buff, hash_table* ht, int fd){
+void SET(int client_fd, char* buff, hash_table* ht, struct th_info* ctx){
     int i = 4;
     int j = 0;
     char key[32], value[128];
@@ -24,7 +24,15 @@ void SET(int client_fd, char* buff, hash_table* ht, int fd){
     write(client_fd, "OK\n", 3);
     write(client_fd, "> ", 2);
 
+    // on ouvre le fichier associé et on stocke les nouvelles valeurs
+    char fichier[128];
+    snprintf(fichier, 128, "../clients/variables%d.txt", ctx->i);
+    int fd = open(fichier, O_RDWR, 0666);
+    if (fd < 0){
+        perror("open");
+    }
     save(ht, fd);
+    close(fd);
 }
 
 // Commande GET
@@ -33,6 +41,7 @@ void GET(int client_fd, char* buff, hash_table* ht){
     int i = 4;
     int j = 0;
     while (buff[i] != 10) key[j++] = buff[i++];
+
     key[j] = '\0';
 
     const char* value = search(ht, key);
@@ -47,7 +56,7 @@ void GET(int client_fd, char* buff, hash_table* ht){
 
 
 // Commande DEL
-void DEL(int client_fd, char* buff, hash_table* ht, int fd){
+void DEL(int client_fd, char* buff, hash_table* ht, struct th_info* ctx){
     char key[32];
     int i = 4;
     int j = 0;
@@ -58,6 +67,16 @@ void DEL(int client_fd, char* buff, hash_table* ht, int fd){
             
     write(client_fd, "OK\n", 3);
     write(client_fd, "> ", 2);
+
+    // On ecrase le fichier précédent
+    char fichier[128];
+    snprintf(fichier, 128, "../clients/variables%d.txt", ctx->i);
+    int fd = open(fichier, O_RDWR | O_TRUNC, 0666);
+    if (fd < 0){
+        perror("open");
+    }
+    save(ht, fd);
+    close(fd);
 }
 
 // Commande ACL USERS
@@ -66,7 +85,7 @@ void ACL_USERS(int client_fd){
     int n = 1;
 
     // On récupère le contenu du fichier et on le passe a client_fd
-    FILE* fd = fopen("../noms.txt", "r");
+    FILE* fd = fopen("../clients/noms.txt", "r");
     while (fgets(buff, 50, fd) != 0){
         char tmp[100];
         snprintf(tmp, 100, "%d) %s",n, buff);
@@ -78,26 +97,32 @@ void ACL_USERS(int client_fd){
 
 // Commande COPY
 void COPY(int client_fd, char* buff, hash_table* ht, int fd){
-    int i = 4;
-    int j = 0;
-    char key[32], keybis[32];
 
     // On récupère la clé et puis la valeur
-    while (buff[i] != ' ' && buff[i] != '\0') key[j++] = buff[i++];
+    char key[32];
+    int i = 5;
+    int j = 0;
+    while (buff[i] != 32) key[j++] = buff[i++];
+
     key[j] = '\0';
     char* value = search(ht, key);
 
-    while (buff[i] == ' ') i++;
+    if (value != NULL) {
+        while (buff[i] == ' ') i++;
+        // On récupère ensuite la nouvelle clé et on insère dans la hash table et dans le fichier
+        j = 0;
 
-    // On récupère ensuite la nouvelle clé et on insère dans la hash table et dans le fichier
-    j = 0;
-    while (buff[i] != '\n' && buff[i] != '\0') keybis[j++] = buff[i++];
-    keybis[j] = '\0';
+        char keybis[32];
+        while (buff[i] != '\n' && buff[i] != '\0') keybis[j++] = buff[i++];
+        keybis[j] = '\0';
 
-    insert(ht, keybis, value);
-    write(client_fd, "OK\n", 3);
-    write(client_fd, "> ", 2);
-    save(ht, fd);
+        insert(ht, keybis, value);
+        write(client_fd, "OK\n", 3);
+        write(client_fd, "> ", 2);
+        save(ht, fd);
+    } else {
+        write(client_fd, "Clé non trouvée\n", strlen("Clé non trouvée\n"));    
+    }
 }
 
 // Commande ECHO
